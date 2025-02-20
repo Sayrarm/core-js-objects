@@ -463,33 +463,185 @@ function group(array, keySelector, valueSelector) {
  *  For more examples see unit tests.
  */
 
+class Selector {
+  constructor() {
+    this.elementValue = '';
+    this.idValue = '';
+    this.classValues = [];
+    this.attrValues = [];
+    this.pseudoClassValues = [];
+    this.pseudoElementValue = '';
+    this.combinator = '';
+    this.selectors = [];
+    this.elementCount = 0;
+    this.idCount = 0;
+    this.pseudoElementCount = 0;
+    this.hasElement = false;
+    this.hasId = false;
+    this.hasPseudoElement = false;
+  }
+
+  element(value) {
+    if (this.hasElement) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (
+      this.hasId ||
+      this.classValues.length ||
+      this.attrValues.length ||
+      this.pseudoClassValues.length ||
+      this.hasPseudoElement
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    this.elementValue = value;
+    this.hasElement = true;
+    return this;
+  }
+
+  id(value) {
+    if (this.hasId) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    if (
+      this.classValues.length ||
+      this.attrValues.length ||
+      this.pseudoClassValues.length ||
+      this.hasPseudoElement
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    this.idValue = value;
+    this.hasId = true;
+    return this;
+  }
+
+  class(value) {
+    if (
+      this.attrValues.length ||
+      this.pseudoClassValues.length ||
+      this.hasPseudoElement
+    ) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    this.classValues.push(value);
+    return this;
+  }
+
+  attr(value) {
+    if (this.pseudoClassValues.length || this.hasPseudoElement) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    this.attrValues.push(value);
+    return this;
+  }
+
+  pseudoClass(value) {
+    if (this.hasPseudoElement) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+    this.pseudoClassValues.push(value);
+    return this;
+  }
+
+  pseudoElement(value) {
+    if (this.hasPseudoElement) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+    this.pseudoElementValue = value;
+    this.hasPseudoElement = true;
+    return this;
+  }
+
+  combine(selector1, combinator, selector2) {
+    this.selectors = [selector1, selector2];
+    this.combinator = combinator;
+    return this;
+  }
+
+  stringify() {
+    let selectorString = '';
+
+    if (this.selectors.length) {
+      selectorString = `${this.selectors[0].stringify()} ${
+        this.combinator
+      } ${this.selectors[1].stringify()}`;
+    } else {
+      if (this.elementValue) {
+        selectorString += this.elementValue;
+      }
+      if (this.idValue) {
+        selectorString += `#${this.idValue}`;
+      }
+      if (this.classValues.length) {
+        selectorString += this.classValues.map((c) => `.${c}`).join('');
+      }
+      if (this.attrValues.length) {
+        selectorString += this.attrValues.map((a) => `[${a}]`).join('');
+      }
+      if (this.pseudoClassValues.length) {
+        selectorString += this.pseudoClassValues.map((p) => `:${p}`).join('');
+      }
+      if (this.pseudoElementValue) {
+        selectorString += `::${this.pseudoElementValue}`;
+      }
+    }
+
+    return selectorString;
+  }
+}
+
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    const selector = new Selector();
+    return selector.element(value);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const selector = new Selector();
+    return selector.id(value);
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const selector = new Selector();
+    return selector.class(value);
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const selector = new Selector();
+    return selector.attr(value);
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const selector = new Selector();
+    return selector.pseudoClass(value);
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const selector = new Selector();
+    return selector.pseudoElement(value);
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const selector = new Selector();
+    return selector.combine(selector1, combinator, selector2);
   },
 };
 
